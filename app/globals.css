@@ -1,49 +1,80 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --text-light: #64748b;
+  --primary: #2563eb; --border: #e2e8f0; --danger: #ef4444; --success: #16a34a;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg); color: var(--text);
+}
+.header { background: var(--card); padding: 16px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+.header h1 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.stat-box { background: var(--card); padding: 16px; border-radius: 8px; border: 1px solid var(--border); border-left: 4px solid var(--primary); }
+.stat-box.success { border-left-color: var(--success); }
+.stat-box.danger { border-left-color: var(--danger); }
+.stat-box h4 { margin: 0 0 4px 0; font-size: 0.875rem; color: var(--text-light); }
+.stat-box p { margin: 0; font-size: 1.5rem; font-weight: 700; }
+.flex-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.input-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+.input-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+.input { padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.875rem; outline: none; width: 100%; box-sizing: border-box; }
+.btn { padding: 10px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+.btn:hover { opacity: 0.9; }
+.btn.success { background: var(--success); }
+.btn.danger { background: var(--danger); }
+.map-wrap { height: 65vh; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); z-index: 1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+details { margin-bottom: 16px; }
+details summary { cursor: pointer; font-weight: 600; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; user-select: none; }
+details[open] summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
+details[open] .content { border: 1px solid var(--border); border-top: none; padding: 16px; border-radius: 0 0 8px 8px; background: var(--card); }
+/* ---------- kategori titik di peta ---------- */
+.marker-db { background: #2563eb; border: 2px solid #fff; border-radius: 50%; width: 100%; height: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+.marker-manual { background: #f97316; border: 2px solid #fff; border-radius: 50%; width: 100%; height: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+.marker-osm { background: #9ca3af; border: 1px solid #fff; border-radius: 50%; width: 100%; height: 100%; }
+
+.badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; margin-bottom: 8px; }
+.badge.db { background: #2563eb; }
+.badge.manual { background: #f97316; }
+.badge.osm { background: #9ca3af; }
+
+.map-controls { position: absolute; top: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- responsif HP ---------- */
+@media (max-width: 768px) {
+  .header { padding: 12px 16px; }
+  .header h1 { font-size: 1.05rem; }
+  .container { padding: 12px; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-box { padding: 10px; }
+  .stat-box h4 { font-size: 0.7rem; }
+  .stat-box p { font-size: 1.1rem; }
+  .flex-row { flex-direction: column; align-items: stretch; }
+  .input-group { min-width: 100%; }
+  .btn { width: 100%; }
+  .map-wrap { height: 55vh; }
+  .map-controls { top: 8px; right: 8px; }
 }
 
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@media (max-width: 480px) {
+  .map-wrap { height: 50vh; }
+  .map-controls { flex-direction: row; }
+  .map-controls .btn { width: auto; font-size: 0.75rem; padding: 8px 10px; }
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
+/* ---------- modal & toast ---------- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal-box { background: #fff; border-radius: 10px; padding: 20px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+.modal-title { margin: 0 0 8px; font-size: 1.1rem; }
+.modal-message { margin: 0 0 14px; color: #475569; font-size: 0.9rem; line-height: 1.5; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #fff; border-radius: 8px; padding: 12px 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.15); z-index: 3000; font-size: 0.9rem; max-width: 90%; }
+/* ---------- fullscreen peta ---------- */
+.map-wrap:fullscreen { height: 100vh; width: 100vw; border-radius: 0; border: none; }
+/* ---------- fullscreen seluruh halaman (filter ikut tampil) ---------- */
+html:fullscreen .container { padding: 10px 16px; }
+html:fullscreen .map-wrap { height: calc(100vh - 310px); }
+.marker-noo { background: #eab308; border: 2px solid #fff; border-radius: 50%; width: 100%; height: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+.badge.noo { background: #eab308; }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-}

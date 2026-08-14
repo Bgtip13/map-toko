@@ -1,0 +1,1153 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2026-08-14T04:37:27Z",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/325854080",
+        "addr:full": "Jl Meyjen Sungkono",
+        "amenity": "marketplace",
+        "building": "yes",
+        "capacity:persons": "500",
+        "name": "Pasar Hewan",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.7011078,
+          -8.0561458
+        ]
+      },
+      "id": "way/325854080"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/351193457",
+        "building": "yes",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4149914,
+          -7.82244
+        ]
+      },
+      "id": "way/351193457"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/362358165",
+        "building": "yes",
+        "name": "Unipet",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3928685,
+          -7.778146
+        ]
+      },
+      "id": "way/362358165"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/362933311",
+        "building": "yes",
+        "name": "Pet Shop",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3956658,
+          -7.7574773
+        ]
+      },
+      "id": "way/362933311"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/472067630",
+        "addr:city": "Walikukun",
+        "building": "yes",
+        "name": "Pasar Hewan Walikukun",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.2250831,
+          -7.406912
+        ]
+      },
+      "id": "way/472067630"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/474057140",
+        "addr:city": "Ngrambe",
+        "building": "yes",
+        "name": "Pasar Hewan Ngrambe",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.2081739,
+          -7.4952005
+        ]
+      },
+      "id": "way/474057140"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/530026812",
+        "access:roof": "no",
+        "addr:full": "Jalan Wonosari, Banguntapan, Bantul, Yogyakarta",
+        "building": "yes",
+        "building:levels": "1",
+        "building:roof": "tile",
+        "building:structure": "unreinforced_masonry",
+        "building:walls": "brick",
+        "capacity": "4",
+        "name": "PetVille",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4050543,
+          -7.810886
+        ]
+      },
+      "id": "way/530026812"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/530659761",
+        "building": "yes",
+        "name": "Ternak Kambing",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.2743602,
+          -7.9710803
+        ]
+      },
+      "id": "way/530659761"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/530793564",
+        "building": "yes",
+        "name": "Kios Pakan Ternak Berkah 2",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4750549,
+          -7.7786982
+        ]
+      },
+      "id": "way/530793564"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/530982792",
+        "addr:city": "Sleman",
+        "addr:district": "Ngaglik",
+        "addr:street": "Jalan Kaliurang",
+        "building": "yes",
+        "building:levels": "1",
+        "name": "Pet Shop",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4124262,
+          -7.7045442
+        ]
+      },
+      "id": "way/530982792"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/531010537",
+        "addr:city": "Baturetno",
+        "addr:housenumber": "9",
+        "addr:postcode": "55197",
+        "addr:street": "Jalan Gilang Raya",
+        "building": "yes",
+        "name": "Mochi Mochi Petshop",
+        "opening_hours": "09:00-20:00",
+        "payment:cash": "yes",
+        "phone": "+6281225319500",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4172098,
+          -7.8222276
+        ]
+      },
+      "id": "way/531010537"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/535259075",
+        "addr:housenumber": "44",
+        "addr:street": "Jalan Mohammad Yamin",
+        "building": "yes",
+        "name": "Orlando Petshop",
+        "phone": "+62 821-3725-4252",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.8187951,
+          -7.576989
+        ]
+      },
+      "id": "way/535259075"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/537354580",
+        "building": "yes",
+        "name": "griya mino",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.8533022,
+          -7.5722545
+        ]
+      },
+      "id": "way/537354580"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/537586497",
+        "addr:city": "Kota Cirebon",
+        "addr:country": "ID",
+        "addr:housenumber": "10D",
+        "addr:province": "Jawa Barat",
+        "addr:street": "Jalan Kasepuhan",
+        "building": "yes",
+        "name": "Loddy's Petshop & Aquarium",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.5716684,
+          -6.7241795
+        ]
+      },
+      "id": "way/537586497"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/613182275",
+        "addr:city": "Bantul",
+        "addr:district": "Bambanglipuro",
+        "addr:postcode": "55764",
+        "addr:province": "DI Yogyakarta",
+        "addr:subdistrict": "Sumbermulyo",
+        "building": "yes",
+        "name": "Alkaizen Ikan Hias",
+        "operator": "Keisha Aghni Mariva",
+        "payment:cash": "yes",
+        "payment:debit_cards": "yes",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3317869,
+          -7.932808
+        ]
+      },
+      "id": "way/613182275"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/613667211",
+        "access:roof": "no",
+        "addr:full": "Pucung, Wukirsari, Imogiri, Bantul, DIY",
+        "building": "marketplace",
+        "building:condition": "good",
+        "building:floor": "ceramics",
+        "building:levels": "1",
+        "building:material": "brick",
+        "building:roof": "tin",
+        "building:structure": "confined_masonry",
+        "capacity:persons": "100-250",
+        "marketplace:authority": "officially_managed",
+        "name": "Pasar Burung Wukirsari",
+        "opening_hours": "08:00-16:00",
+        "shop": "pet",
+        "source": "survey",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4175111,
+          -7.896797
+        ]
+      },
+      "id": "way/613667211"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/637408412",
+        "addr:city": "Klaten",
+        "addr:postcode": "57454",
+        "addr:street": "Jalan Jogja - Solo",
+        "building": "yes",
+        "description": "#grabcgise2018_team3",
+        "name": "Griya Satwa",
+        "opening_hours": "sunrise-sunset",
+        "operator": "Prastyo Bayu Nugroho",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.5053269,
+          -7.754936
+        ]
+      },
+      "id": "way/637408412"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1072554320",
+        "building": "yes",
+        "name": "WIDODO's POULTRY SHOP",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.1183165,
+          -7.4058272
+        ]
+      },
+      "id": "way/1072554320"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1072577319",
+        "building": "yes",
+        "name": "Pakan Ternak POJOK ABADI",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.0804918,
+          -7.4640728
+        ]
+      },
+      "id": "way/1072577319"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1073782726",
+        "building": "yes",
+        "name": "Toko Pakan Burung Pak Isman",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.1134574,
+          -7.4051191
+        ]
+      },
+      "id": "way/1073782726"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1075015733",
+        "building": "yes",
+        "name": "Putra Sumber Agung PS \" grosir pakan ternak",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.0325689,
+          -7.4792503
+        ]
+      },
+      "id": "way/1075015733"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1076231157",
+        "building": "yes",
+        "name": "mas mo kenari",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.0156468,
+          -7.4602072
+        ]
+      },
+      "id": "way/1076231157"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1138567991",
+        "addr:full": "Pakis",
+        "building": "yes",
+        "name": "Toko Pakan Ternak Milenial",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.1105556,
+          -7.1636543
+        ]
+      },
+      "id": "way/1138567991"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1346004577",
+        "building": "yes",
+        "name": "Kenzie Petshop",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.5267712,
+          -6.7372854
+        ]
+      },
+      "id": "way/1346004577"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1346331416",
+        "building": "yes",
+        "name": "Harry Petshop",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.5239057,
+          -6.7395568
+        ]
+      },
+      "id": "way/1346331416"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1434423293",
+        "addr:city": "Kota Cirebon",
+        "addr:country": "ID",
+        "addr:housenumber": "21D",
+        "addr:province": "Jawa Barat",
+        "addr:street": "Jalan Yudhasari II",
+        "building": "retail",
+        "building:levels": "2",
+        "name": "Bima Petshop",
+        "opening_hours": "Mo-Su 08:00-20:00",
+        "shop": "pet",
+        "source": "survey",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.5346446,
+          -6.7340215
+        ]
+      },
+      "id": "way/1434423293"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1457407495",
+        "building": "yes",
+        "name": "Momoezza",
+        "shop": "pet",
+        "@geometry": "center"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.8763445,
+          -7.5551182
+        ]
+      },
+      "id": "way/1457407495"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/3584926495",
+        "name": "Toko Ikan Hias",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3549002,
+          -7.8228286
+        ]
+      },
+      "id": "node/3584926495"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/4052331292",
+        "name": "Rumah munggung Koi",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.8154944,
+          -7.5527256
+        ]
+      },
+      "id": "node/4052331292"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/4206079593",
+        "name": "Toko Pakan burung",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.8384315,
+          -7.5747081
+        ]
+      },
+      "id": "node/4206079593"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/5583703626",
+        "name": "Cherry Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3732009,
+          -7.8186746
+        ]
+      },
+      "id": "node/5583703626"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/7880489261",
+        "name": "Jogja Dragonfish",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.374194,
+          -7.7849903
+        ]
+      },
+      "id": "node/7880489261"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9705063750",
+        "name": "eLLo Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4490178,
+          -7.749934
+        ]
+      },
+      "id": "node/9705063750"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9722498184",
+        "name": "Pikas Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4493284,
+          -7.7627938
+        ]
+      },
+      "id": "node/9722498184"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9722506449",
+        "name": "Queency Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4491436,
+          -7.7487803
+        ]
+      },
+      "id": "node/9722506449"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9742563596",
+        "name": "Kanaya Fish Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.43473,
+          -7.7354618
+        ]
+      },
+      "id": "node/9742563596"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9742627506",
+        "name": "Kanaya Poultry Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4347345,
+          -7.7354248
+        ]
+      },
+      "id": "node/9742627506"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9748830452",
+        "name": "Jenny Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.482769,
+          -7.7877279
+        ]
+      },
+      "id": "node/9748830452"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9751910470",
+        "name": "Wong's Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.6123994,
+          -7.9774625
+        ]
+      },
+      "id": "node/9751910470"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9774451010",
+        "addr:city": "Karanganyar",
+        "addr:postcode": "57712",
+        "addr:street": "Raya Palur Karanganyar",
+        "name": "Story Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.9364419,
+          -7.5921244
+        ]
+      },
+      "id": "node/9774451010"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9794530542",
+        "name": "Gigas Aquarium",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4434561,
+          -7.7528805
+        ]
+      },
+      "id": "node/9794530542"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9807895293",
+        "name": "Petshop Browny Persian",
+        "opening_hours": "Mo-Su 06:00-21:00",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4355134,
+          -7.7515725
+        ]
+      },
+      "id": "node/9807895293"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9811880196",
+        "name": "Masterindo Petshop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3212466,
+          -7.9053067
+        ]
+      },
+      "id": "node/9811880196"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/9811900429",
+        "name": "Pet Shop Ling - Ling",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3137741,
+          -7.9199721
+        ]
+      },
+      "id": "node/9811900429"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11050319230",
+        "addr:city": "Salatiga",
+        "addr:housenumber": "6",
+        "addr:street": "Jalan Kartini",
+        "name": "Boss Petshop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4970454,
+          -7.3231962
+        ]
+      },
+      "id": "node/11050319230"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11311063374",
+        "addr:city": "Pedan",
+        "addr:street": "Jl. Troketon - Kalangan, Ngledok, Troketon, Pedan",
+        "name": "Jual Beli Kambing Pak Harto",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.7115661,
+          -7.6875928
+        ]
+      },
+      "id": "node/11311063374"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11518271386",
+        "addr:city": "Karanganyar",
+        "addr:postcode": "57782",
+        "addr:street": "Jl. Jatiyoso - Matesih",
+        "name": "Toko Nada Alam",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.0406594,
+          -7.6602521
+        ]
+      },
+      "id": "node/11518271386"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11608944869",
+        "name": "Pika Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.5050265,
+          -7.3226271
+        ]
+      },
+      "id": "node/11608944869"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11835762514",
+        "addr:street": "Jalan Raya Bangilan",
+        "name": "Muna Bird",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.7152505,
+          -6.9690485
+        ]
+      },
+      "id": "node/11835762514"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11853095144",
+        "addr:city": "Bantul",
+        "addr:district": "Bambanglipuro",
+        "addr:neighbourhood": "Gersik",
+        "addr:postcode": "55764",
+        "addr:province": "DI Yogyakarta",
+        "addr:subdistrict": "Sumbermulyo",
+        "name": "Alkaizen Ikan Hias",
+        "opening_hours": "24/7",
+        "operator": "Keisha Aghni Mariva",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3317828,
+          -7.9328081
+        ]
+      },
+      "id": "node/11853095144"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12035722407",
+        "name": "Godean Petshop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3261712,
+          -7.7759519
+        ]
+      },
+      "id": "node/12035722407"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12139514009",
+        "addr:street": "Jalan Anggajaya III",
+        "name": "Terminal Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.3956922,
+          -7.7570949
+        ]
+      },
+      "id": "node/12139514009"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12197209588",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          109.8996797,
+          -7.3756169
+        ]
+      },
+      "id": "node/12197209588"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12215757316",
+        "name": "Bibi Petshop",
+        "opening_hours": "Mo-Su 08:00-21:00",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.8004064,
+          -7.5709171
+        ]
+      },
+      "id": "node/12215757316"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12598901963",
+        "name": "Rika Petshop Tlogowungu",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.0152879,
+          -6.7144509
+        ]
+      },
+      "id": "node/12598901963"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/12991058894",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "addr:housenumber": "42",
+        "addr:postcode": "50139",
+        "addr:province": "Jawa Tengah",
+        "addr:street": "Jalan Wotgandul Timur",
+        "addr:subdistrict": "Kranggan",
+        "name": "Catdog Petshop Wotgandul",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4254202,
+          -6.9785942
+        ]
+      },
+      "id": "node/12991058894"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13184539897",
+        "check_date": "2025-09-29",
+        "name": "Anabul Petshop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.5312101,
+          -6.7363774
+        ]
+      },
+      "id": "node/13184539897"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13477182714",
+        "description": "Pet food, grooming, pet hotels, vaccine, etc.",
+        "name": "Larson Pet & Care",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.5518666,
+          -6.728935
+        ]
+      },
+      "id": "node/13477182714"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13991958330",
+        "check_date": "2026-07-06",
+        "name": "Hamtaro Petshop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.530377,
+          -6.7094118
+        ]
+      },
+      "id": "node/13991958330"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/14000431901",
+        "addr:city": "Sleman",
+        "addr:district": "Tempel",
+        "addr:postcode": "55552",
+        "addr:province": "Daerah Istimewa Yogyakarta",
+        "addr:subdistrict": "Lumbungrejo",
+        "name": "Axel Pet Shop",
+        "shop": "pet"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.323216,
+          -7.646959
+        ]
+      },
+      "id": "node/14000431901"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/14021924849",
+        "addr:city": "Bantul",
+        "addr:district": "Banguntapan",
+        "addr:housename": "ISTANA HAMSTER JOGJA 2",
+        "addr:housenumber": "42",
+        "addr:neighbourhood": "Wonoctur",
+        "addr:postcode": "55198",
+        "addr:province": "DIY",
+        "addr:street": "Jl. Ringroad Timur",
+        "addr:subdistrict": "Banguntapan",
+        "name": "ISTANA HAMSTER JOGJA 2",
+        "opening_hours": "Mo-Fr 10:00-18:00",
+        "payment:cash": "yes",
+        "payment:qris": "yes",
+        "shop": "pet",
+        "website": "https://linktr.ee/istanahamsterjogja"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4098007,
+          -7.800897
+        ]
+      },
+      "id": "node/14021924849"
+    }
+  ]
+}
