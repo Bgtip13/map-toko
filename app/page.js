@@ -65,14 +65,18 @@ export default function Page() {
 
   useEffect(() => { fetchStores(); }, [fetchStores, refresh]);
 
-  // ambil data toko NOO
-  useEffect(() => {
-    async function load() {
-      const { data, error } = await supabase.from('noo').select('*');
-      if (!error && data) setNooStores(data);
-    }
-    load();
-  }, [refresh]);
+    // ambil data toko NOO (ikut filter area/kabupaten/kecamatan)
+  const fetchNoo = useCallback(async () => {
+    let q = supabase.from('noo').select('*');
+    if (area) q = q.eq('area', area);
+    if (kabupaten) q = q.eq('kabupaten', kabupaten);
+    if (kecamatan) q = q.eq('kecamatan', kecamatan);
+    const { data, error } = await q;
+    if (!error && data) setNooStores(data);
+  }, [area, kabupaten, kecamatan]);
+
+  useEffect(() => { fetchNoo(); }, [fetchNoo, refresh]);
+
 
   const tokoPunyaTitik = stores.filter(s => s.latlong).length;
   const tokoTanpaTitik = stores.length - tokoPunyaTitik;

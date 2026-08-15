@@ -13,7 +13,8 @@ export default function PasteImport({ onDone }) {
   const [pinOpen, setPinOpen] = useState(false);
   const [pinValue, setPinValue] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const pending = useRef(null);
+  const [confirmTarget, setConfirmTarget] = useState(null);
+  const pending = useRef(null); // { aksi, target, baris }
 
   function showToast(teks, jenis = 'info') {
     setToast({ teks, jenis });
@@ -53,12 +54,24 @@ export default function PasteImport({ onDone }) {
 
   const petaNoo = {
     area: 'area', a: 'area',
+    kabupaten: 'kabupaten', kecamatan: 'kecamatan',
     nama: 'nama',
     'no hp': 'no_hp', nohp: 'no_hp', no_hp: 'no_hp', telp: 'no_hp',
     longlat: 'longlat', alamat: 'alamat'
   };
 
   async function lakukanSimpan(target, baris) {
+    // cegah paste format NOO ke kotak Toko Utama
+    if (target === 'stores' && baris[0].some(h => h.trim().toLowerCase() === 'nama')) {
+      showToast('❌ Ini format NOO — paste di kotak Toko NOO 🟡, bukan Toko Utama.', 'error');
+      return;
+    }
+    // cegah paste tanpa kolom NAMA ke kotak NOO
+    if (target === 'noo' && !baris[0].some(h => h.trim().toLowerCase() === 'nama')) {
+      showToast('❌ Data NOO harus ada kolom NAMA.', 'error');
+      return;
+    }
+
     const peta = target === 'noo' ? petaNoo : petaToko;
     const rows = mapRows(baris, peta);
     const keyA = target === 'noo' ? 'nama' : 'pelanggan';
@@ -72,48 +85,51 @@ export default function PasteImport({ onDone }) {
 
     const { error } = await supabase.from(target).insert(baru);
     if (error) { showToast('❌ ' + error.message, 'error'); return; }
-    showToast(`✅ Tersimpan ${baru.length} baru (${rows.length - baru.length} dilewati).`);
+    showToast(`✅ Tersimpan ${baru.length} baru (${rows.length - baru.length} dilewati karena sudah ada).`);
     if (target === 'noo') setNooText(''); else setText('');
     onDone();
   }
 
-  function onSimpanClick() {
-    const baris = parseRows(text);
-    if (baris.length < 2) { showToast('⚠️ Paste dulu data Toko Utama (minimal 2 baris).', 'warn'); return; }
-    pending.current = { aksi: 'simpan', target: 'stores', baris };
-    setPinValue(''); setPinOpen(true);
+  async function lakukanHapus(target) {
+    const { error } = await supabase.from(target).delete().gte('id', 0);
+    if (error) { showToast('❌ Gagal hapus: ' + error.message, 'error'); return; }
+    showToast('🗑️ Semua data ' + (target === 'noo' ? 'NOO' : 'toko') + ' dihapus.');
+    setText(''); setNooText('');
+    onDone();
   }
 
-  function onSimpanNooClick() {
-    const baris = parseRows(nooText);
-    if (baris.length < 2) { showToast('⚠️ Paste dulu data Toko NOO (minimal 2 baris).', 'warn'); return; }
-    pending.current = { aksi: 'simpan', target: 'noo', baris };
-    setPinValue(''); setPinOpen(true);
-  }
-
-  function onHapusClick(target) {
-    pending.current = { aksi: 'hapus', target };
-    setConfirmOpen(true);
-  }
-
-  function onConfirmHapus() {
-    setConfirmOpen(false);
-    setPinValue('');
-    setPinOpen(true);
-  }
-
-  async function onPinConfirm() {
-    if (pinValue.trim() !== PIN) { showToast('❌ PIN salah!', 'error'); setPinValue(''); return; }
+  function onPinConfirm() {
+    if (pinValue.trim() !== PIN) {
+      showToast('❌ PIN salah!', 'error');
+      setPinValue('');
+      return;
+    }
     setPinOpen(false);
     const p = pending.current;
     if (!p) return;
-    if (p.aksi === 'hapus') {
-      const { error } = await supabase.from(p.target).delete().gte('id', 0);
-      showToast(error ? '❌ Gagal: ' + error.message : '🗑️ Data dihapus.', error ? 'error' : 'info');
-      onDone();
-    } else {
-      await lakukanSimpan(p.target, p.baris);
-    }
+    pending.current = null;
+    if (p.aksi === 'simpan') lakukanSimpan(p.target, p.baris);
+    if (p.aksi === 'hapus') { setConfirmTarget(p.target); setConfirmOpen(true); }
+  }
+
+  function onConfirmHapus() {
+    const t = confirmTarget;
+    setConfirmOpen(false);
+    setConfirmTarget(null);
+    if (t) lakukanHapus(t);
+  }
+
+  function mintaSimpan(target, baris) {
+    if (baris.length < 2) { showToast('⚠️ Paste dulu data dari Excel.', 'warn'); return; }
+    pending.current = { aksi: 'simpan', target, baris };
+    setPinOpen(true);
+    setPinValue('');
+  }
+
+  function mintaHapus(target) {
+    pending.current = { aksi: 'hapus', target };
+    setPinOpen(true);
+    setPinValue('');
   }
 
   return (
@@ -121,19 +137,35 @@ export default function PasteImport({ onDone }) {
       <details>
         <summary>⚙️ Kelola Data (Paste dari Excel)</summary>
         <div className="content">
-          <strong>Toko Utama</strong>
-          <textarea className="input" value={text} onChange={e => setText(e.target.value)} rows={5} placeholder={'AREA\tKABUPATEN\tKECAMATAN\t...\nSOC\tSUKOHARJO\tKARTASURA\t...'} style={{ fontFamily: 'monospace', marginBottom: 8 }} />
-          <div className="flex-row" style={{ marginBottom: 16 }}>
-            <button className="btn success" onClick={onSimpanClick}>Simpan Toko Utama</button>
-            <button className="btn danger" onClick={() => onHapusClick('stores')}>Hapus Semua Toko</button>
+
+          <h4 style={{ margin: '0 0 6px' }}>Toko Utama</h4>
+          <textarea
+            className="input"
+            value={text}
+            onChange={e => setText(e.target.value)}
+            rows={5}
+            placeholder={'AREA\tKABUPATEN\tKECAMATAN\tEXISTING\tPELANGGAN\tADM\tELA TOKO\tKELAS BYR\tLONGLAT\tLINK MAPS\tALAMAT\nSOC\tSUKOHARJO\tKARTASURA\tEXISTING\t28 Petshop Solo\tADEL\tRT\tGold\t-7.55,110.7\t...'}
+            style={{ fontFamily: 'monospace', marginBottom: 12 }}
+          />
+          <div className="flex-row" style={{ marginBottom: 18 }}>
+            <button className="btn success" onClick={() => mintaSimpan('stores', parseRows(text))}>Simpan Data Toko</button>
+            <button className="btn danger" onClick={() => mintaHapus('stores')}>Hapus Semua Toko</button>
           </div>
 
-          <strong>Toko NOO (Kunjungan Sales) 🟡</strong>
-          <textarea className="input" value={nooText} onChange={e => setNooText(e.target.value)} rows={5} placeholder={'AREA\tNAMA\tNO HP\tLONGLAT\tALAMAT\nSOC\t3 saudara ps\t0812-8846-2460\t-7.814190,110.9\tJl. Pemuda II...'} style={{ fontFamily: 'monospace', marginBottom: 8 }} />
+          <h4 style={{ margin: '0 0 6px' }}>Toko NOO (Kunjungan Sales) 🟡</h4>
+          <textarea
+            className="input"
+            value={nooText}
+            onChange={e => setNooText(e.target.value)}
+            rows={5}
+            placeholder={'AREA\tKABUPATEN\tKECAMATAN\tNAMA\tNO HP\tLONGLAT\tALAMAT\nSOC\tSUKOHARJO\tKARTASURA\t3 saudara ps\t0812-8846-2460\t-7.814190,110.9\tJl. Pemuda II...'}
+            style={{ fontFamily: 'monospace', marginBottom: 12 }}
+          />
           <div className="flex-row">
-            <button className="btn success" onClick={onSimpanNooClick}>Simpan Toko NOO</button>
-            <button className="btn danger" onClick={() => onHapusClick('noo')}>Hapus Semua NOO</button>
+            <button className="btn success" onClick={() => mintaSimpan('noo', parseRows(nooText))}>Simpan Toko NOO</button>
+            <button className="btn danger" onClick={() => mintaHapus('noo')}>Hapus Semua NOO</button>
           </div>
+
         </div>
       </details>
 
@@ -153,11 +185,11 @@ export default function PasteImport({ onDone }) {
       <Modal
         open={confirmOpen}
         title="⚠️ Konfirmasi Hapus"
-        message="Data akan dihapus permanen. Lanjutkan?"
+        message="Semua data akan dihapus permanen. Lanjutkan?"
         confirmText="Ya, Hapus"
         cancelText="Batal"
         onConfirm={onConfirmHapus}
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={() => { setConfirmOpen(false); setConfirmTarget(null); }}
       />
 
       <Toast toast={toast} />

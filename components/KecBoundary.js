@@ -4,6 +4,20 @@ import { useEffect, useState } from 'react';
 import { GeoJSON, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
+const KAB_KODE = {
+  cilacap:'3301', banyumas:'3302', purbalingga:'3303', banjarnegara:'3304',
+  kebumen:'3305', purworejo:'3306', wonosobo:'3307', magelang:'3308',
+  boyolali:'3309', klaten:'3310', sukoharjo:'3311', wonogiri:'3312',
+  karanganyar:'3313', sragen:'3314', grobogan:'3315', blora:'3316',
+  rembang:'3317', pati:'3318', kudus:'3319', jepara:'3320', demak:'3321',
+  semarang:'3322', temanggung:'3323', kendal:'3324', batang:'3325',
+  pekalongan:'3326', pemalang:'3327', tegal:'3328', brebes:'3329',
+  kotamagelang:'3371', kotasurakarta:'3372', kotasalatiga:'3373',
+  kotasemarang:'3374', kotapekalongan:'3375', kotategal:'3376',
+  kulonprogo:'3401', bantul:'3402', gunungkidul:'3403', sleman:'3404',
+  kotayogyakarta:'3471'
+};
+
 const cacheKec = {};
 
 function normName(n) {
@@ -12,20 +26,6 @@ function normName(n) {
     .replace(/\b(kabupaten|kab|the)\b/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-// ubah hasil Overpass (elements) jadi GeoJSON features
-function overpassToGeoJSON(elements) {
-  return (elements || []).map((el, i) => {
-    const geom = el.geometry || [];
-    const coords = geom.map(p => [p.lon, p.lat]);
-    return {
-      id: el.id || i,
-      type: 'Feature',
-      properties: { nama: el.tags && el.tags.name ? el.tags.name : '' },
-      geometry: coords.length >= 4 ? { type: 'Polygon', coordinates: [coords] } : null
-    };
-  }).filter(f => f.geometry);
 }
 
 function findKec(features, name) {
@@ -43,29 +43,30 @@ export default function KecBoundary({ kabupaten, kecamatan, stores }) {
   const map = useMap();
   const [features, setFeatures] = useState(null);
 
-  // muat batas kecamatan untuk kabupaten yang dipilih (di-cache)
+  // muat dari file lokal /kecamatan/{kode}.json — dijamin jalan tanpa server
   useEffect(() => {
     setFeatures(null);
-    const key = normName(kabupaten);
-    if (!key) return;
+    if (!kabupaten) return;
+    const kode = KAB_KODE[normName(kabupaten).replace(/\s+/g, '')];
+    if (!kode) return;
 
-    if (cacheKec[key]) { setFeatures(cacheKec[key]); return; }
+    if (cacheKec[kode]) { setFeatures(cacheKec[kode]); return; }
 
-    fetch('/api/kecamatan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kabupaten })
-    })
-      .then(async r => {
-        if (!r.ok) throw new Error('not found');
-        const data = await r.json();
-        return overpassToGeoJSON(data.elements);
-      })
-      .then(fs => {
-        cacheKec[key] = fs;
+    fetch('/kecamatan/' + kode + '.json')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(j => {
+        const fs = (j.features || []).map((f, i) => ({
+          id: f.id || i,
+          type: 'Feature',
+          properties: {
+            nama: (f.properties && (f.properties.name || f.properties.kecamatan || f.properties.KECAMATAN || f.properties.nama || f.properties.kec || f.properties.nm_kec)) || ''
+          },
+          geometry: f.geometry
+        })).filter(f => f.geometry);
+        cacheKec[kode] = fs;
         setFeatures(fs);
       })
-      .catch(() => console.warn('KecBoundary: gagal memuat kecamatan untuk', kabupaten));
+      .catch(() => { /* file tidak ada — tidak masalah */ });
   }, [kabupaten]);
 
   // zoom ke kecamatan yang dipilih

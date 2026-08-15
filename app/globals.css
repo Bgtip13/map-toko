@@ -77,4 +77,16 @@ html:fullscreen .container { padding: 10px 16px; }
 html:fullscreen .map-wrap { height: calc(100vh - 310px); }
 .marker-noo { background: #eab308; border: 2px solid #fff; border-radius: 50%; width: 100%; height: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 .badge.noo { background: #eab308; }
-
+/* ---------- fullscreen: filter & UI ringkas ---------- */
+html:fullscreen .header { padding: 6px 16px; }
+html:fullscreen .header h1 { font-size: 1rem; }
+html:fullscreen .stats-grid { display: none; }
+html:fullscreen details { display: none; }
+html:fullscreen .input-group label { display: none; }
+html:fullscreen .input-group { min-width: 0; flex: 1 1 140px; }
+html:fullscreen .input { padding: 5px 8px; font-size: 0.8rem; }
+html:fullscreen .card { padding: 8px 10px; margin-bottom: 8px; }
+html:fullscreen .flex-row { gap: 6px; }
+html:fullscreen .btn { padding: 5px 10px; font-size: 0.8rem; width: auto; }
+html:fullscreen .container { padding: 8px 12px; }
+html:fullscreen .map-wrap { height: calc(100vh - 80px); }
