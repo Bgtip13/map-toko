@@ -1,4 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Peta Sebaran Toko
+
+Dashboard peta untuk memantau lokasi toko existing (sumber: Google Sheet) di
+Jawa Tengah & DIY, lengkap dengan filter area/kabupaten/kecamatan dan batas
+wilayah.
+
+## Konfigurasi
+
+Semua konfigurasi lewat environment variable (buat file `.env.local`):
+
+| Variabel | Wajib | Keterangan |
+| --- | --- | --- |
+| `GOOGLE_SHEET_ID` | tidak | ID spreadsheet sumber data. Default sudah menunjuk ke sheet proyek ini. Sheet harus dibagikan **Anyone with the link → Viewer**. |
+| `NEXT_PUBLIC_SUPABASE_URL` | tidak | Hanya untuk fitur **titik manual**. Tanpa ini aplikasi tetap jalan normal, titik manual saja yang nonaktif. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | tidak | Pasangan dari URL Supabase di atas. |
+| `ALLOWED_DEV_ORIGINS` | tidak | Hanya untuk `next dev`: origin tambahan (dipisah koma) yang boleh memuat asset dev, mis. hostname preview. Kosong secara default. |
+
+Tab yang dibaca dari spreadsheet: `EXISTING` (kolom AREA, KABUPATEN,
+KECAMATAN, STATUS, PELANGGAN, Longlat, Link Maps, Alamat). Kalau ada tab
+`NOO` / `POTENSI`, tambahkan namanya di `TABS` pada
+[app/api/sheet/route.js](app/api/sheet/route.js).
+
+## Menjalankan
+
+```bash
+npm install
+npm run dev
+```
+
+Buka http://localhost:3000.
+
+## Sumber data peta
+
+- Data toko: `/api/sheet` (dibaca ulang otomatis tiap 5 menit)
+- Batas kabupaten/kota: `public/batas_kabupaten.geojson`
+- Titik manual: tabel `manual_points` di Supabase (opsional)
 
 ## Getting Started
 

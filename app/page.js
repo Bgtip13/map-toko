@@ -42,12 +42,16 @@ export default function HomePage() {
       errs.push('Gagal mengambil data Google Sheet: ' + e.message);
     }
 
-    // Titik manual (opsional) — kalau gagal, peta tetap jalan
-    try {
-      const m = await supabase.from('manual_points').select('*');
-      setManualData(m.error ? [] : (m.data || []));
-    } catch (e) {
+    // Titik manual (opsional) — kalau gagal / Supabase belum diset, peta tetap jalan
+    if (!supabase) {
       setManualData([]);
+    } else {
+      try {
+        const m = await supabase.from('manual_points').select('*');
+        setManualData(m.error ? [] : (m.data || []));
+      } catch (e) {
+        setManualData([]);
+      }
     }
 
     setErrors(errs);

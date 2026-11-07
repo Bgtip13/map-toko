@@ -179,24 +179,61 @@ function findKabCode(name) {
   return null;
 }
 
-/* ── FETCH BOUNDARY ── */
-const bCache = {};
-async function fetchBound(code, type) {
-  const key = type + '_' + code;
-  if (bCache[key]) return bCache[key];
-  try {
-    const r = await fetch('/' + type + '/' + code + '.json');
-    if (!r.ok) {
-      console.warn('[Boundary] File tidak ditemukan:', type + '/' + code + '.json');
-      return null;
-    }
-    const d = await r.json();
-    bCache[key] = d;
-    return d;
-  } catch (e) {
-    console.warn('[Boundary] Gagal load:', e.message);
-    return null;
+/* ── FETCH BOUNDARY ──
+   Semua batas kabupaten/kota ada di satu file: /batas_kabupaten.geojson
+   (properties.shapeName, mis. "Semarang", "Kota Semarang"). */
+const BOUNDARY_URL = '/batas_kabupaten.geojson';
+let boundaryPromise = null;
+let boundaryCache = null;
+
+function loadBoundaries() {
+  if (boundaryCache) return Promise.resolve(boundaryCache);
+  if (!boundaryPromise) {
+    boundaryPromise = fetch(BOUNDARY_URL)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        boundaryCache = d && Array.isArray(d.features) ? d : null;
+        return boundaryCache;
+      })
+      .catch(e => {
+        console.warn('[Boundary] Gagal load:', e.message);
+        return null;
+      });
   }
+  return boundaryPromise;
+}
+
+/* nama wilayah tanpa awalan KAB. / KABUPATEN / KOTA */
+function wilKey(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/^\s*(kabupaten|kab|kota)\b[\s.]*/, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+const isKotaName = s => /^\s*kota\b/i.test(String(s || ''));
+
+function findKabFeature(features, name) {
+  const target = wilKey(name);
+  if (!target || !features || features.length === 0) return null;
+
+  const shapeName = f => (f.properties && (f.properties.shapeName || f.properties.name)) || '';
+  const pick = list => {
+    if (!list.length) return null;
+    const kota = list.filter(f => isKotaName(shapeName(f)));
+    const kab = list.filter(f => !isKotaName(shapeName(f)));
+    // "KOTA X" → kota dulu; "KAB. X" / "X" → kabupaten dulu
+    return isKotaName(name) ? (kota[0] || kab[0]) : (kab[0] || kota[0]);
+  };
+
+  const exact = features.filter(f => wilKey(shapeName(f)) === target);
+  const hit = pick(exact);
+  if (hit) return hit;
+
+  const fuzzy = features.filter(f => {
+    const n = wilKey(shapeName(f));
+    return n && (n.includes(target) || target.includes(n));
+  });
+  return pick(fuzzy);
 }
 
 /* ── GEO CENTER ── */
@@ -304,63 +341,45 @@ function ManualPopup({ d }) {
 export default function MapView({ tokoData, nooData, potensiData, manualData, region, onRegionChange }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [kabBound, setKabBound] = useState(null);
-  const [kecBound, setKecBound] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [clickPos, setClickPos] = useState(null);
   const [form, setForm] = useState({ nama: '', keterangan: '' });
 
-  // ── Load boundaries ──
+  // ── Load batas kabupaten/kota ──
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      setKabBound(null);
-      setKecBound(null);
-      if (!region.kabupaten) return;
+    setKabBound(null);
+    if (!region.kabupaten) return;
 
-      const code = findKabCode(region.kabupaten);
-      console.log('[Boundary] Kab:', region.kabupaten, '→ code:', code);
-      if (!code) return;
+    loadBoundaries().then(fc => {
+      if (cancelled || !fc) return;
+      const feat = findKabFeature(fc.features, region.kabupaten);
+      if (feat) setKabBound({ type: 'FeatureCollection', features: [feat] });
+    });
 
-      const kb = await fetchBound(code, 'kabupaten');
-      if (!cancelled && kb) {
-        setKabBound(kb);
-        console.log('[Boundary] Kab loaded:', code);
-      }
-
-      if (region.kecamatan) {
-        const kc = await fetchBound(code, 'kecamatan');
-        if (!cancelled && kc) {
-          const kn = norm(region.kecamatan);
-          const filtered = (kc.features || []).filter(f => {
-            const n = norm(f.properties.NAME_3 || f.properties.name || f.properties.NAME_2 || '');
-            return n === kn || n.includes(kn) || kn.includes(n);
-          });
-          setKecBound({ ...kc, features: filtered });
-          console.log('[Boundary] Kec:', region.kecamatan, '→', filtered.length, 'features');
-        }
-      }
-    }
-    load();
     return () => { cancelled = true; };
-  }, [region.kabupaten, region.kecamatan]);
+  }, [region.kabupaten]);
 
   // ── FlyTo center ──
-  const flyCenter = region.kecamatan && kecBound
-    ? geoCenter(kecBound)
-    : region.kabupaten && kabBound
+  const flyCenter = region.kabupaten && kabBound
     ? geoCenter(kabBound)
     : [-7.5, 110.5];
-  const flyZoom = region.kecamatan ? 14 : region.kabupaten ? 11 : 8;
+  const flyZoom = region.kecamatan ? 13 : region.kabupaten ? 10 : 8;
 
   // ── Save manual point ──
   async function saveManual() {
     if (!clickPos || !form.nama) return;
+    if (!supabase) {
+      alert('Titik manual butuh Supabase. Isi NEXT_PUBLIC_SUPABASE_URL & NEXT_PUBLIC_SUPABASE_ANON_KEY dulu.');
+      return;
+    }
     try {
-      await supabase.from('manual_points').insert({
+      const { error } = await supabase.from('manual_points').insert({
         nama: form.nama,
         longlat: clickPos.lat + ',' + clickPos.lng,
         keterangan: form.keterangan,
       });
+      if (error) throw new Error(error.message);
       setShowModal(false);
       setClickPos(null);
       setForm({ nama: '', keterangan: '' });
@@ -405,16 +424,10 @@ export default function MapView({ tokoData, nooData, potensiData, manualData, re
         <FlyTo center={flyCenter} zoom={flyZoom} />
         <ClickHandler onClick={latlng => { setClickPos(latlng); setShowModal(true); }} />
 
-        {/* Kabupaten boundary */}
+        {/* Batas kabupaten/kota */}
         {kabBound && (
           <GeoJSON key={'kab-' + region.kabupaten} data={kabBound}
             style={() => ({ color: '#2563eb', weight: 2.5, fillOpacity: 0.04, fillColor: '#2563eb' })} />
-        )}
-
-        {/* Kecamatan boundary */}
-        {kecBound && kecBound.features && kecBound.features.length > 0 && (
-          <GeoJSON key={'kec-' + region.kecamatan} data={kecBound}
-            style={() => ({ color: '#7c3aed', weight: 2.5, fillOpacity: 0.06, fillColor: '#7c3aed' })} />
         )}
 
         {/* Toko Existing */}
