@@ -1,387 +1,558 @@
 'use client';
-
-import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON, useMapEvents } from 'react-leaflet';
+import { useState, useEffect } from 'react';
+import {
+  MapContainer, TileLayer, Marker, Popup,
+  useMap, useMapEvents, GeoJSON
+} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import MarkerClusterGroup from 'react-leaflet-cluster';
-import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
-import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css';
-import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import KecBoundary from './KecBoundary';
-import Modal from './Modal';
-import Toast from './Toast';
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
-});
+/* ── ICONS ── */
+function makeIcon(color, size = 10) {
+  return L.divIcon({
+    className: '',
+    html: '<div style="width:' + size + 'px;height:' + size + 'px;background:' + color + ';border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+const ICONS = {
+  toko: makeIcon('#2563eb'),
+  noo: makeIcon('#eab308'),
+  potensi: makeIcon('#ef4444'),
+  manual: makeIcon('#8b5cf6'),
+};
 
-const iconDb = L.divIcon({ className: '', html: '<div class="marker-db"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
-const iconManual = L.divIcon({ className: '', html: '<div class="marker-manual"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
-const iconOsm = L.divIcon({ className: '', html: '<div class="marker-osm"></div>', iconSize: [12, 12], iconAnchor: [6, 6] });
-const iconNoo = L.divIcon({ className: '', html: '<div class="marker-noo"></div>', iconSize: [16, 16], iconAnchor: [8, 8] });
-
-function parseLatLong(latlong) {
-  if (!latlong) return null;
-  const parts = String(latlong).split(',');
-  if (parts.length !== 2) return null;
+/* ── PARSE LAT/LNG ── */
+function parseLL(str) {
+  if (!str || typeof str !== 'string') return null;
+  const clean = str.replace(/\s+/g, '');
+  const parts = clean.split(/[,;|]/);
+  if (parts.length < 2) return null;
   const lat = parseFloat(parts[0]);
   const lng = parseFloat(parts[1]);
-  if (isNaN(lat) || isNaN(lng)) return null;
+  if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
   return [lat, lng];
 }
 
-const clean = (val) =>
-  val && String(val).trim() !== '' && String(val) !== '#N/A' && String(val) !== 'N/A'
-    ? String(val)
-    : null;
-
-function MapInteraction({ addMode, setAddMode, onAskNama }) {
-  useMapEvents({
-    click(e) {
-      if (!addMode) return;
-      setAddMode(false);
-      onAskNama(e.latlng);
-    }
-  });
-  return null;
+/* ── NORMALISASI ── */
+function norm(s) {
+  return (s || '').toLowerCase().replace(/[^a-z]/g, '');
 }
 
-let cacheGeo = null;
-let cachePromise = null;
-function loadBoundaries() {
-  if (cacheGeo) return Promise.resolve(cacheGeo);
-  if (!cachePromise) {
-    cachePromise = fetch('/batas_kabupaten.geojson')
-      .then(r => { if (!r.ok) throw new Error('no file'); return r.json(); })
-      .then(j => { cacheGeo = j; return j; })
-      .catch(() => { cachePromise = null; return null; });
+/* ══════════════════════════════════════════════════════════
+   KODE WILAYAH — KODE BPS RESMI INDONESIA
+   Source: BPS / GADM / Kemendagri
+
+   JAWA TENGAH:
+     Kab 3301-3329, Kota 3371-3376
+   DI YOGYAKARTA:
+     Kab 3401-3404, Kota 3471
+   ══════════════════════════════════════════════════════════ */
+
+// ── KOTA — HANYA dipakai kalau ada prefix "KOTA" ──
+const KAB_KOTA = {
+  'magelang': '3371',      // Kota Magelang
+  'surakarta': '3372',     // Kota Surakarta / Solo
+  'salatiga': '3373',      // Kota Salatiga
+  'semarang': '3374',      // Kota Semarang
+  'pekalongan': '3375',    // Kota Pekalongan
+  'tegal': '3376',         // Kota Tegal
+  'yogyakarta': '3471',    // Kota Yogyakarta
+};
+
+// ── KABUPATEN — untuk prefix "KAB." / "KAB" ──
+const KAB_KAB = {
+  'semarang': '3322',      // Kab. Semarang
+  'pekalongan': '3326',    // Kab. Pekalongan
+  'tegal': '3328',         // Kab. Tegal
+  'magelang': '3308',      // Kab. Magelang
+};
+
+// ── DEFAULT — tanpa prefix "KAB"/"KOTA" ──
+// Untuk nama yang HANYA kota (tidak punya kabupaten dengan nama sama), arahkan ke kota
+// Untuk nama yang punya kabupaten, arahkan ke kabupaten
+const KAB_CODE = {
+  // === JAWA TENGAH — KABUPATEN ===
+  'cilacap': '3301',
+  'banyumas': '3302',
+  'purbalingga': '3303',
+  'banjarnegara': '3304',
+  'kebumen': '3305',
+  'purworejo': '3306',
+  'wonosobo': '3307',
+  'magelang': '3308',      // default = kabupaten
+  'boyolali': '3309',
+  'klaten': '3310',
+  'sukoharjo': '3311',
+  'wonogiri': '3312',
+  'karanganyar': '3313',
+  'sragen': '3314',
+  'grobogan': '3315',
+  'blora': '3316',
+  'rembang': '3317',
+  'pati': '3318',
+  'kudus': '3319',
+  'jepara': '3320',
+  'demak': '3321',
+  'semarang': '3374', 
+  'temanggung': '3323',
+  'kendal': '3324',
+  'batang': '3325',
+  'pekalongan': '3326',    // default = kabupaten
+  'pemalang': '3327',
+  'tegal': '3328',          // default = kabupaten
+  'brebes': '3329',
+
+  // === DI YOGYAKARTA — KABUPATEN ===
+  'bantul': '3402',
+  'gunungkidul': '3403',
+  'sleman': '3404',
+  'kulonprogo': '3401',
+
+  // === KOTA-KOTA KHUSUS (hanya ada kota, tidak ada kabupaten nama sama) ===
+  'surakarta': '3372',     // Solo = kota
+  'yogyakarta': '3471',    // Jogja = kota
+  'salatiga': '3373',      // Salatiga = kota
+};
+
+// ── ALIAS TAMBAHAN ──
+const KAB_ALIAS = {
+  'solo': '3372',
+  'jogja': '3471',
+  'gunung kidul': '3403',
+  'kulon progo': '3401',
+  'kota surakarta': '3372',
+  'kota yogyakarta': '3471',
+  'kota semarang': '3374',
+  'kota magelang': '3371',
+  'kota pekalongan': '3375',
+  'kota tegal': '3376',
+  'kota salatiga': '3373',
+  'kab semarang': '3322',
+  'kab pekalongan': '3326',
+  'kab tegal': '3328',
+  'kab magelang': '3308',
+};
+
+/* ── FIND KODE KABUPATEN ── */
+function findKabCode(name) {
+  if (!name) return null;
+  const raw = name.trim();
+  const n = norm(raw);
+  const hasKab = /^kab/i.test(raw);
+  const hasKota = /^kota/i.test(raw);
+
+  // 0. Cek alias dulu
+  const al = norm(raw.replace(/\./g, ''));
+  for (const [k, c] of Object.entries(KAB_ALIAS)) {
+    if (norm(k) === al) return c;
   }
-  return cachePromise;
-}
 
-function normName(n) {
-  return String(n || '').toLowerCase()
-    .replace(/[^a-z0-9]/g, ' ')
-    .replace(/\b(kabupaten|kab|the)\b/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+  // 1. Tanpa prefix → cek KAB_CODE langsung
+  if (!hasKab && !hasKota) {
+    if (KAB_CODE[n]) return KAB_CODE[n];
+  }
 
-function findFeature(geojson, name) {
-  const target = normName(name);
-  if (!target) return null;
-  const feats = geojson && geojson.features ? geojson.features : [];
-  const ambil = x => {
-    const p = x.properties || {};
-    return [p.shapeName, p.NAME_2, p.name, p.nama, p.ADM2_EN, p.ADM2_ID];
-  };
-  let f = feats.find(x => ambil(x).some(c => normName(c) === target));
-  if (f) return f;
-  return feats.find(x => ambil(x).some(c => {
-    const nc = normName(c);
-    return nc && (nc.includes(target) || target.includes(nc));
-  }));
-}
+  // 2. Prefix "KAB." → cari di KAB_KAB dulu, fallback KAB_CODE
+  if (hasKab) {
+    const s = n.replace(/^kab/, '');
+    if (KAB_KAB[s]) return KAB_KAB[s];
+    if (KAB_CODE[s]) return KAB_CODE[s];
+  }
 
-function MapController({ region, stores, nooStores, boundaries }) {
-  const map = useMap();
-  const last = useRef('');
+  // 3. Prefix "KOTA" → cari di KAB_KOTA dulu, fallback KAB_CODE
+  if (hasKota) {
+    const s = n.replace(/^kota/, '');
+    if (KAB_KOTA[s]) return KAB_KOTA[s];
+    if (KAB_CODE[s]) return KAB_CODE[s];
+  }
 
-  const fitToPoints = useCallback(() => {
-    const dariToko = stores.map(s => parseLatLong(s.latlong)).filter(Boolean);
-    const dariNoo = (nooStores || []).map(s => parseLatLong(s.longlat)).filter(Boolean);
-    const points = [...dariToko, ...dariNoo];
-    if (points.length > 0) map.fitBounds(points, { padding: [40, 40] });
-  }, [stores, nooStores, map]);
-
-  useEffect(() => {
-    const parts = region.split('|');
-    const kab = parts[1];
-    const kec = parts[2];
-
-    const key = kec
-      ? `kec|${region}|s${stores.length}`
-      : kab
-        ? `kab|${kab}|${boundaries ? 'b' : 'n'}`
-        : `all|${region}|s${stores.length}`;
-
-    if (last.current === key) return;
-    last.current = key;
-
-    if (kec) {
-      fitToPoints();
-    } else if (kab) {
-      const feat = boundaries ? findFeature(boundaries, kab) : null;
-      if (feat) map.fitBounds(L.geoJSON(feat).getBounds(), { padding: [30, 30] });
-      else fitToPoints();
-    } else {
-      fitToPoints();
-    }
-  }, [region, stores, boundaries, map, fitToPoints]);
-
+  // 4. Fuzzy fallback
+  for (const [k, c] of Object.entries(KAB_CODE)) {
+    if (n.includes(norm(k)) || norm(k).includes(n)) return c;
+  }
+  for (const [k, c] of Object.entries(KAB_KOTA)) {
+    if (n.includes(norm(k)) || norm(k).includes(n)) return c;
+  }
   return null;
 }
 
-function BoundaryLayer({ boundaries, kabupaten }) {
-  const feat = kabupaten && boundaries ? findFeature(boundaries, kabupaten) : null;
-  if (!feat) return null;
+/* ── FETCH BOUNDARY ── */
+const bCache = {};
+async function fetchBound(code, type) {
+  const key = type + '_' + code;
+  if (bCache[key]) return bCache[key];
+  try {
+    const r = await fetch('/' + type + '/' + code + '.json');
+    if (!r.ok) {
+      console.warn('[Boundary] File tidak ditemukan:', type + '/' + code + '.json');
+      return null;
+    }
+    const d = await r.json();
+    bCache[key] = d;
+    return d;
+  } catch (e) {
+    console.warn('[Boundary] Gagal load:', e.message);
+    return null;
+  }
+}
+
+/* ── GEO CENTER ── */
+function geoCenter(g) {
+  let sLat = 0, sLng = 0, n = 0;
+  function walk(c) {
+    if (typeof c[0] === 'number') { sLng += c[0]; sLat += c[1]; n++; }
+    else if (Array.isArray(c)) c.forEach(walk);
+  }
+  if (g && g.features) g.features.forEach(f => { if (f.geometry) walk(f.geometry.coordinates); });
+  return n ? [sLat / n, sLng / n] : [-7.5, 110.5];
+}
+
+/* ══════════════════════════════════════════
+   INNER COMPONENTS
+   ══════════════════════════════════════════ */
+
+function FlyTo({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) map.flyTo(center, zoom, { duration: 1.2 });
+  }, [center[0], center[1], zoom]);
+  return null;
+}
+
+function ClickHandler({ onClick }) {
+  useMapEvents({ click: e => onClick(e.latlng) });
+  return null;
+}
+
+/* ── POPUP COMPONENTS ── */
+function TokoPopup({ d }) {
   return (
-    <GeoJSON
-      key={kabupaten}
-      data={feat}
-      style={{ color: '#2563eb', weight: 2, fillColor: '#2563eb', fillOpacity: 0.08 }}
-    />
+    <div style={{ fontFamily: 'sans-serif', minWidth: 180, maxWidth: 280 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: '#1e40af', marginBottom: 6, borderBottom: '2px solid #dbeafe', paddingBottom: 4 }}>
+        {d.pelanggan || 'Tanpa Nama'}
+      </div>
+      <div style={{ fontSize: 12, color: '#444', marginBottom: 3 }}>
+        📍 {d.alamat || '-'}
+      </div>
+      <div style={{ fontSize: 12, color: '#444', marginBottom: 3 }}>
+        🏘️ {d.kabupaten || '-'} → {d.kecamatan || '-'}
+      </div>
+      {d.area && <div style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>🏷️ Area: {d.area}</div>}
+      {d.existing && <div style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>📋 Status: {d.existing}</div>}
+      {d.adm && <div style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>👤 ADM: {d.adm}</div>}
+      {d.kelas_toko && <div style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>⭐ Kelas Toko: {d.kelas_toko}</div>}
+      {d.kelas_byr && <div style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>💰 Kelas Bayar: {d.kelas_byr}</div>}
+      {d.link_maps && (
+        <div style={{ marginTop: 6 }}>
+          <a href={d.link_maps} target="_blank" rel="noreferrer"
+            style={{ fontSize: 12, color: '#2563eb', textDecoration: 'underline' }}>
+            🗺️ Buka di Google Maps
+          </a>
+        </div>
+      )}
+    </div>
   );
 }
 
-export default function MapView({ stores, nooStores, region, onDataChanged }) {
-  const [boundaries, setBoundaries] = useState(null);
-  const kabupaten = region.split('|')[1];
-  const kecamatan = region.split('|')[2];
-  const [addMode, setAddMode] = useState(false);
-  const [osmStores, setOsmStores] = useState([]);
-  const [loadingOsm, setLoadingOsm] = useState(false);
-  const mapRef = useRef(null);
+function NooPopup({ d }) {
+  return (
+    <div style={{ fontFamily: 'sans-serif', minWidth: 180, maxWidth: 280 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: '#a16207', marginBottom: 6, borderBottom: '2px solid #fef3c7', paddingBottom: 4 }}>
+        {d.nama || 'Tanpa Nama'}
+      </div>
+      <div style={{ fontSize: 12, color: '#444', marginBottom: 3 }}>📍 {d.alamat || '-'}</div>
+      <div style={{ fontSize: 12, color: '#444' }}>🏘️ {d.kabupaten || '-'} → {d.kecamatan || '-'}</div>
+    </div>
+  );
+}
 
-  const [namaModal, setNamaModal] = useState(null);
-  const [nama, setNama] = useState('');
-  const [confirmHapusId, setConfirmHapusId] = useState(null);
-  const [toast, setToast] = useState(null);
+function PotensiPopup({ d }) {
+  return (
+    <div style={{ fontFamily: 'sans-serif', minWidth: 180, maxWidth: 280 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: '#dc2626', marginBottom: 6, borderBottom: '2px solid #fee2e2', paddingBottom: 4 }}>
+        {d.nama || 'Tanpa Nama'}
+      </div>
+      <div style={{ fontSize: 12, color: '#444', marginBottom: 3 }}>📍 {d.alamat || '-'}</div>
+      <div style={{ fontSize: 12, color: '#444', marginBottom: 3 }}>🏘️ {d.kabupaten || '-'} → {d.kecamatan || '-'}</div>
+      {d.link_maps && (
+        <div style={{ marginTop: 4 }}>
+          <a href={d.link_maps} target="_blank" rel="noreferrer"
+            style={{ fontSize: 12, color: '#2563eb', textDecoration: 'underline' }}>
+            🔗 Link
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
 
-  function showToast(teks, jenis = 'info') {
-    setToast({ teks, jenis });
-    setTimeout(() => setToast(null), 3500);
-  }
+function ManualPopup({ d }) {
+  return (
+    <div style={{ fontFamily: 'sans-serif', minWidth: 160 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: '#7c3aed', marginBottom: 4 }}>{d.nama || 'Titik Manual'}</div>
+      <div style={{ fontSize: 12, color: '#555' }}>📝 {d.keterangan || '-'}</div>
+    </div>
+  );
+}
 
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
-    } else {
-      if (document.exitFullscreen) document.exitFullscreen();
-    }
-  }
+/* ══════════════════════════════════════════
+   MAIN MAPVIEW COMPONENT
+   ══════════════════════════════════════════ */
+export default function MapView({ tokoData, nooData, potensiData, manualData, region, onRegionChange }) {
+  const [fullscreen, setFullscreen] = useState(false);
+  const [kabBound, setKabBound] = useState(null);
+  const [kecBound, setKecBound] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [clickPos, setClickPos] = useState(null);
+  const [form, setForm] = useState({ nama: '', keterangan: '' });
 
+  // ── Load boundaries ──
   useEffect(() => {
-    function onFs() {
-      setTimeout(() => { if (mapRef.current) mapRef.current.invalidateSize(); }, 300);
+    let cancelled = false;
+    async function load() {
+      setKabBound(null);
+      setKecBound(null);
+      if (!region.kabupaten) return;
+
+      const code = findKabCode(region.kabupaten);
+      console.log('[Boundary] Kab:', region.kabupaten, '→ code:', code);
+      if (!code) return;
+
+      const kb = await fetchBound(code, 'kabupaten');
+      if (!cancelled && kb) {
+        setKabBound(kb);
+        console.log('[Boundary] Kab loaded:', code);
+      }
+
+      if (region.kecamatan) {
+        const kc = await fetchBound(code, 'kecamatan');
+        if (!cancelled && kc) {
+          const kn = norm(region.kecamatan);
+          const filtered = (kc.features || []).filter(f => {
+            const n = norm(f.properties.NAME_3 || f.properties.name || f.properties.NAME_2 || '');
+            return n === kn || n.includes(kn) || kn.includes(n);
+          });
+          setKecBound({ ...kc, features: filtered });
+          console.log('[Boundary] Kec:', region.kecamatan, '→', filtered.length, 'features');
+        }
+      }
     }
-    document.addEventListener('fullscreenchange', onFs);
-    return () => document.removeEventListener('fullscreenchange', onFs);
-  }, []);
+    load();
+    return () => { cancelled = true; };
+  }, [region.kabupaten, region.kecamatan]);
 
-  useEffect(() => { loadBoundaries().then(setBoundaries); }, []);
+  // ── FlyTo center ──
+  const flyCenter = region.kecamatan && kecBound
+    ? geoCenter(kecBound)
+    : region.kabupaten && kabBound
+    ? geoCenter(kabBound)
+    : [-7.5, 110.5];
+  const flyZoom = region.kecamatan ? 14 : region.kabupaten ? 11 : 8;
 
-  const markers = stores.map(s => ({ ...s, pos: parseLatLong(s.latlong) })).filter(s => s.pos);
-
-  async function loadOsmFile() {
+  // ── Save manual point ──
+  async function saveManual() {
+    if (!clickPos || !form.nama) return;
     try {
-      const res = await fetch('/petshop_osm.geojson');
-      if (!res.ok) throw new Error('file belum ada di folder public');
-      const geo = await res.json();
-      const list = (geo.features || []).map((f, i) => {
-        const c = f.geometry && f.geometry.coordinates;
-        if (!c) return null;
-        return {
-          id: f.id || i,
-          nama: (f.properties && f.properties.name) || 'Petshop Tanpa Nama',
-          pos: [c[1], c[0]]
-        };
-      }).filter(Boolean);
-      setOsmStores(list);
-      if (list.length === 0) showToast('Tidak ada petshop di file OSM.', 'warn');
+      await supabase.from('manual_points').insert({
+        nama: form.nama,
+        longlat: clickPos.lat + ',' + clickPos.lng,
+        keterangan: form.keterangan,
+      });
+      setShowModal(false);
+      setClickPos(null);
+      setForm({ nama: '', keterangan: '' });
+      window.location.reload();
     } catch (e) {
-      showToast('Gagal memuat data OSM: ' + e.message, 'error');
+      alert('Gagal simpan: ' + e.message);
     }
   }
 
-  async function simpanManual() {
-    if (!namaModal) return;
-    if (!nama.trim()) { showToast('⚠️ Nama toko wajib diisi.', 'warn'); return; }
-    const latlong = `${namaModal.latlong.lat.toFixed(6)},${namaModal.latlong.lng.toFixed(6)}`;
-    const { error } = await supabase.from('stores').insert([{ pelanggan: nama.trim(), latlong, sumber: 'manual' }]);
-    if (error) showToast('❌ Gagal menambah titik: ' + error.message, 'error');
-    else { showToast('✅ Titik baru tersimpan.', 'info'); onDataChanged(); }
-    setNamaModal(null); setNama('');
+  // ── Fullscreen filter handlers ──
+  function handleFSFilterChange(key, val) {
+    if (onRegionChange) {
+      if (key === 'kabupaten') {
+        onRegionChange({ kabupaten: val, kecamatan: '' });
+      } else {
+        onRegionChange({ ...region, kecamatan: val });
+      }
+    }
   }
 
-  async function konfirmasiHapusManual() {
-    if (!confirmHapusId) return;
-    await supabase.from('stores').delete().eq('id', confirmHapusId);
-    showToast('🗑️ Titik manual dihapus.', 'info');
-    setConfirmHapusId(null);
-    onDataChanged();
-  }
+  // ── Get unique lists for filters ──
+  const allKab = [...new Set([...(tokoData || []), ...(nooData || []), ...(potensiData || [])].map(d => d.kabupaten).filter(Boolean))].sort();
+  const allKec = [...new Set(
+    [...(tokoData || []), ...(nooData || []), ...(potensiData || [])]
+      .filter(d => !region.kabupaten || d.kabupaten === region.kabupaten)
+      .map(d => d.kecamatan).filter(Boolean)
+  )].sort();
+
+  // ── Render ──
+  const wrapStyle = fullscreen
+    ? { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, background: '#fff' }
+    : { height: 500, borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0', position: 'relative' };
 
   return (
-    <div className="map-wrap" style={{ position: 'relative' }}>
-      <div className="map-controls">
-        <button
-          className={`btn ${addMode ? 'danger' : 'success'}`}
-          onClick={() => setAddMode(!addMode)}
-          style={{ boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-        >
-          {addMode ? '✖ Batal Tambah Titik' : '📍 Tambah Titik Baru'}
-        </button>
-        <button
-          className="btn"
-          onClick={loadOsmFile}
-          style={{ background: '#4b5563', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-        >
-          {loadingOsm ? 'Memuat...' : '📂 Tampilkan Petshop OSM'}
-        </button>
-        <button
-          className="btn"
-          onClick={toggleFullscreen}
-          style={{ background: '#0f766e', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-        >
-          ⛶ Fullscreen
-        </button>
-      </div>
-
-      <MapContainer
-        center={[-2.5, 118]}
-        zoom={5}
-        style={{ height: '100%', width: '100%', cursor: addMode ? 'crosshair' : 'grab' }}
-        ref={mapRef}
-      >
+    <div style={wrapStyle}>
+      <MapContainer center={[-7.5, 110.5]} zoom={8} style={{ height: '100%', width: '100%' }}
+        zoomControl={true}>
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <MapController region={region} stores={stores} nooStores={nooStores} boundaries={boundaries} />
-        <BoundaryLayer boundaries={boundaries} kabupaten={kabupaten} />
-        <KecBoundary kabupaten={kabupaten} kecamatan={kecamatan} stores={stores} />
-        <MapInteraction
-          addMode={addMode}
-          setAddMode={setAddMode}
-          onAskNama={(latlng) => { setNama(''); setNamaModal({ latlong: latlng }); }}
-        />
+        <FlyTo center={flyCenter} zoom={flyZoom} />
+        <ClickHandler onClick={latlng => { setClickPos(latlng); setShowModal(true); }} />
 
-        <MarkerClusterGroup chunkedLoading>
-          {markers.map(s => {
-            const isManual = s.sumber === 'manual';
-            const nama = clean(s.pelanggan) || 'Toko Tanpa Nama';
-            const area = clean(s.area);
-            const kab = clean(s.kabupaten);
-            const kec = clean(s.kecamatan);
-            const alamat = clean(s.alamat);
-            const linkMaps = clean(s.link_maps);
-            const isLink = linkMaps && linkMaps.startsWith('http');
+        {/* Kabupaten boundary */}
+        {kabBound && (
+          <GeoJSON key={'kab-' + region.kabupaten} data={kabBound}
+            style={() => ({ color: '#2563eb', weight: 2.5, fillOpacity: 0.04, fillColor: '#2563eb' })} />
+        )}
 
-            return (
-              <Marker key={`db-${s.id}`} position={s.pos} icon={isManual ? iconManual : iconDb}>
-                <Popup minWidth={220}>
-                  <div style={{ fontFamily: 'sans-serif', fontSize: 13 }}>
-                    <span className={`badge ${isManual ? 'manual' : 'db'}`}>
-                      {isManual ? 'Titik Baru (Manual)' : 'Dari Database Excel'}
-                    </span>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: 15, borderBottom: '1px solid #eee', paddingBottom: 4 }}>{nama}</h3>
+        {/* Kecamatan boundary */}
+        {kecBound && kecBound.features && kecBound.features.length > 0 && (
+          <GeoJSON key={'kec-' + region.kecamatan} data={kecBound}
+            style={() => ({ color: '#7c3aed', weight: 2.5, fillOpacity: 0.06, fillColor: '#7c3aed' })} />
+        )}
 
-                    {isManual ? (
-                      <button
-                        onClick={() => setConfirmHapusId(s.id)}
-                        style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 4, cursor: 'pointer', marginTop: 8 }}
-                      >
-                        Hapus Titik Ini
-                      </button>
-                    ) : (
-                      <>
-                        <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                          <tbody>
-                            <tr><th style={{ width: 80, padding: 2 }}>Wilayah</th><td>: {area ? `${area} - ` : ''}{kab} - {kec}</td></tr>
-                            <tr><th style={{ padding: 2 }}>Status</th><td>: {clean(s.existing) || '-'}</td></tr>
-                            <tr><th style={{ padding: 2 }}>Kelas Toko</th><td>: {clean(s.kelas_toko) || '-'}</td></tr>
-                            <tr><th style={{ padding: 2 }}>Kelas Byr</th><td>: {clean(s.kelas_byr) || '-'}</td></tr>
-                            <tr><th style={{ padding: 2 }}>Admin</th><td>: {clean(s.adm) || '-'}</td></tr>
-                          </tbody>
-                        </table>
-                        {alamat && (
-                          <div style={{ marginTop: 8, background: '#f9f9f9', padding: 6, borderRadius: 4 }}>
-                            <strong>Alamat:</strong> <br/>{alamat}
-                          </div>
-                        )}
-                        {isLink && (
-                          <div style={{ marginTop: 10, textAlign: 'center' }}>
-                            <a href={linkMaps} target="_blank" rel="noreferrer" style={{ background: '#2563eb', color: '#fff', textDecoration: 'none', padding: '6px 12px', borderRadius: 4, display: 'inline-block', fontSize: 12 }}>
-                              Buka di Google Maps
-                            </a>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-        </MarkerClusterGroup>
-
-        {(nooStores || []).map(s => {
-          const pos = parseLatLong(s.longlat);
-          if (!pos) return null;
+        {/* Toko Existing */}
+        {(tokoData || []).map((d, i) => {
+          const ll = parseLL(d.latlong);
+          if (!ll) return null;
           return (
-            <Marker key={`noo-${s.id}`} position={pos} icon={iconNoo}>
-              <Popup minWidth={220}>
-                <div style={{ fontFamily: 'sans-serif', fontSize: 13 }}>
-                  <span className="badge noo">Toko NOO (Kunjungan Sales)</span>
-                  <h3 style={{ margin: '0 0 6px 0', fontSize: 15, borderBottom: '1px solid #eee', paddingBottom: 4 }}>
-                    {s.nama || 'Tanpa Nama'}
-                  </h3>
-                  {s.area && <div>Area: {s.area}</div>}
-                  {s.no_hp && <div>📞 {s.no_hp}</div>}
-                  {s.alamat && (
-                    <div style={{ marginTop: 8, background: '#f9f9f9', padding: 6, borderRadius: 4 }}>
-                      <strong>Alamat:</strong> <br/>{s.alamat}
-                    </div>
-                  )}
-                </div>
-              </Popup>
+            <Marker key={'t-' + i} position={ll} icon={ICONS.toko}>
+              <Popup><TokoPopup d={d} /></Popup>
             </Marker>
           );
         })}
 
-        {osmStores.map(s => (
-          <Marker key={`osm-${s.id}`} position={s.pos} icon={iconOsm}>
-            <Popup>
-              <div style={{ fontFamily: 'sans-serif', fontSize: 13 }}>
-                <span className="badge osm">Ditemukan di OpenStreetMap</span>
-                <h3 style={{ margin: 0, fontSize: 15 }}>{s.nama}</h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: 11, color: '#666' }}>
-                  Ada di peta publik, tapi belum tentu masuk database Excel kamu.
-                </p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {/* NOO */}
+        {(nooData || []).map((d, i) => {
+          const ll = parseLL(d.longlat);
+          if (!ll) return null;
+          return (
+            <Marker key={'n-' + i} position={ll} icon={ICONS.noo}>
+              <Popup><NooPopup d={d} /></Popup>
+            </Marker>
+          );
+        })}
+
+        {/* Potensi / Saran */}
+        {(potensiData || []).map((d, i) => {
+          const ll = parseLL(d.longlat);
+          if (!ll) return null;
+          return (
+            <Marker key={'p-' + i} position={ll} icon={ICONS.potensi}>
+              <Popup><PotensiPopup d={d} /></Popup>
+            </Marker>
+          );
+        })}
+
+        {/* Manual */}
+        {(manualData || []).map((d, i) => {
+          const ll = parseLL(d.longlat);
+          if (!ll) return null;
+          return (
+            <Marker key={'m-' + i} position={ll} icon={ICONS.manual}>
+              <Popup><ManualPopup d={d} /></Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
 
-      <Modal
-        open={!!namaModal}
-        title="🏪 Nama Petshop Baru"
-        message="Ketik nama toko yang kamu temukan:"
-        value={nama}
-        onChange={setNama}
-        placeholder="Nama toko..."
-        confirmText="Simpan"
-        onConfirm={simpanManual}
-        onCancel={() => { setNamaModal(null); setNama(''); }}
-      />
+      {/* ── Fullscreen mode: filter + close button ── */}
+      {fullscreen && (
+        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 10001, display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+          {/* Filter kecil di fullscreen */}
+          <div style={{
+            background: 'rgba(255,255,255,0.95)', borderRadius: 8, padding: '6px 10px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)', display: 'flex', gap: 6, alignItems: 'center',
+            fontSize: 12,
+          }}>
+            <select value={region.kabupaten || ''} onChange={e => handleFSFilterChange('kabupaten', e.target.value)}
+              style={{ padding: '4px 6px', borderRadius: 6, border: '1px solid #ccc', fontSize: 12, maxWidth: 150 }}>
+              <option value="">Semua Kab/Kota</option>
+              {allKab.map(k => <option key={k} value={k}>{k}</option>)}
+            </select>
+            <select value={region.kecamatan || ''} onChange={e => handleFSFilterChange('kecamatan', e.target.value)}
+              style={{ padding: '4px 6px', borderRadius: 6, border: '1px solid #ccc', fontSize: 12, maxWidth: 150 }}>
+              <option value="">Semua Kecamatan</option>
+              {allKec.map(k => <option key={k} value={k}>{k}</option>)}
+            </select>
+          </div>
+          {/* Tombol keluar fullscreen */}
+          <button onClick={() => setFullscreen(false)} style={{
+            background: '#ef4444', color: '#fff', border: 'none', padding: '5px 12px',
+            borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 12,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+          }}>
+            ✕ Keluar
+          </button>
+        </div>
+      )}
 
-      <Modal
-        open={!!confirmHapusId}
-        title="🗑️ Hapus Titik Ini?"
-        message="Titik manual ini akan dihapus."
-        confirmText="Ya, Hapus"
-        cancelText="Batal"
-        onConfirm={konfirmasiHapusManual}
-        onCancel={() => setConfirmHapusId(null)}
-      />
+      {/* ── Expand button (normal mode) ── */}
+      {!fullscreen && (
+        <button onClick={() => setFullscreen(true)} style={{
+          position: 'absolute', top: 10, right: 10, zIndex: 1000,
+          background: '#1e40af', color: '#fff', border: 'none', padding: '6px 12px',
+          borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+        }}>
+          ⛶ Fullscreen
+        </button>
+      )}
 
-      <Toast toast={toast} />
+      {/* ── Legend ── */}
+      {!fullscreen && (
+        <div style={{
+          position: 'absolute', bottom: 10, left: 10, zIndex: 1000,
+          background: 'rgba(255,255,255,0.92)', borderRadius: 8, padding: '6px 10px',
+          fontSize: 11, display: 'flex', gap: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.15)'
+        }}>
+          <span><span style={{ color: '#2563eb' }}>●</span> Existing</span>
+          <span><span style={{ color: '#8b5cf6' }}>●</span> Manual</span>
+        </div>
+      )}
+
+      {/* ── Manual point modal ── */}
+      {showModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 10002
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: 24, width: 340,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.25)'
+          }}>
+            <h3 style={{ margin: '0 0 14px', fontSize: 16 }}>📍 Tambah Titik Manual</h3>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10 }}>
+              Koordinat: {clickPos ? clickPos.lat.toFixed(6) + ', ' + clickPos.lng.toFixed(6) : '-'}
+            </div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Nama *</label>
+            <input value={form.nama} onChange={e => setForm({ ...form, nama: e.target.value })}
+              placeholder="Nama titik"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd',
+                fontSize: 13, boxSizing: 'border-box', marginBottom: 10 }} />
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>Keterangan</label>
+            <input value={form.keterangan} onChange={e => setForm({ ...form, keterangan: e.target.value })}
+              placeholder="Keterangan (opsional)"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #ddd',
+                fontSize: 13, boxSizing: 'border-box', marginBottom: 14 }} />
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button onClick={() => { setShowModal(false); setClickPos(null); }}
+                style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: '1px solid #ddd',
+                  cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Batal</button>
+              <button onClick={saveManual}
+                style={{ padding: '8px 16px', borderRadius: 8, background: '#7c3aed', color: '#fff',
+                  border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>💾 Simpan</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
